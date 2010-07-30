@@ -4,95 +4,93 @@ import os
 
 db_filename = os.path.abspath('ccp_dump.db')
 connection_string = 'sqlite:' + db_filename
-connection = connectionForURI(connection_string)
+connection = connectionForURI(connection_string, debug=True, debugOutput=True,
+                             autoCommit=False)
+#connection = connectionForURI(connection_string)
 sqlhub.processConnection = connection
+
+#__connection__ = connection_string
+#__connection__.style = MixedCaseStyle(longID=True)
 
 
 class agtAgents(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         #table = 'tablename'
         idName = 'agentID'
-        style = MixedCaseStyle()
-    division = ForeignKey('crpNPCDivisions')
-    corporation = ForeignKey('crpNPCCorporations')
-    location = ForeignKey('staStations')
+    division = ForeignKey('crpNPCDivisions', dbName='divisionID')
+    corporation = ForeignKey('crpNPCCorporations', dbName='corporationID')
+    location = ForeignKey('staStations', dbName='locationID')
     level = IntCol()
     quality = IntCol()
-    agentType = ForeignKey('agtAgentTypes')
+    agentType = ForeignKey('agtAgentTypes', dbName='agentTypeID')
 
 
 class agtAgentTypes(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'agentTypeID'
-        style = MixedCaseStyle()
     agentType = StringCol()
-    agents = MultipleJoin('agtAgents')
-
-
-#class agtConfig(SQLObject):
-    #    class sqlmeta:
-        #        idName = 'agentID'
-        #        style = MixedCaseStyle()
-        #    k = StringCol()
-        #    v = StringCol()
+    agents = MultipleJoin('agtAgents', joinColumn='agentTypeID')
 
 
 class crpActivities(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'activityID'
-        style = MixedCaseStyle()
     activityName = StringCol()
     description = StringCol()
 
 
 class crpNPCCorporations(SQLObject):
     class sqlmeta:
-        idName = 'corprationID'
-        style = MixedCaseStyle()
+        style = MixedCaseStyle(longID=True)
+        idName = 'corporationID'
         fromDatabase = True
     size = StringCol(length=1, varchar=False)
     extent = StringCol(length=1, varchar=False)
-    solarSystem = ForeignKey('mapSolarSystems')
-    friend = ForeignKey('crpNPCCorporations')
-    enemy = ForeignKey('crpNPCCorporations')
+    solarSystem = ForeignKey('mapSolarSystems', dbName='solarSystemID')
+    friend = ForeignKey('crpNPCCorporations', dbName='friendID')
+    enemy = ForeignKey('crpNPCCorporations', dbName='enemyID')
     scattered = BoolCol()
     fringe = IntCol()
     corridor = IntCol()
     hub = IntCol()
     border = IntCol()
-    faction = ForeignKey('chrFactions')
+    faction = ForeignKey('chrFactions', dbName='factionID')
     stationCount = IntCol()
     stationSystemCount = IntCol()
     description = StringCol()
-    agents = MultipleJoin('agtAgents')
-    stations = MultipleJoin('staStations')
+    agents = MultipleJoin('agtAgents', joinColumn='corporationID')
+    stations = MultipleJoin('staStations', joinColumn='corporationID')
 
 
 class crpNPCDivisions(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'divisionID'
-        style = MixedCaseStyle()
     divisionName = StringCol()
     description = StringCol()
     leaderType = StringCol()
-    agents = MultipleJoin('agtAgents')
+    agents = MultipleJoin('agtAgents', joinColumn='divisionID')
     #TODO: do a multiplejoin for stations?
 
 
+'''
 class eveNames(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'itemID'
-        style = MixedCaseStyle()
     itemName = StringCol()
-    category = ForeignKey('invCategories')
-    group = ForeignKey('invGroups')
-    type = ForeignKey('invTypes')
+    category = ForeignKey('invCategories', dbName='categoryID')
+    group = ForeignKey('invGroups', dbName='groupID')
+    type = ForeignKey('invTypes', dbName='typeID')
 
 
 class invCategories(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'categoryID'
-        style = MixedCaseStyle()
         fromDatabase = True
     categoryName = StringCol()
     description = StringCol()
@@ -100,30 +98,30 @@ class invCategories(SQLObject):
 
 class invGroups(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'groupID'
-        style = MixedCaseStyle()
         fromDatabase = True
-    category = ForeignKey('invCategories')
+    category = ForeignKey('invCategories', dbName='categoryID')
     groupName = StringCol()
     description = StringCol()
 
 class invTypes(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'typeID'
-        style = MixedCaseStyle()
         fromDatabase = True
-    group = ForeignKey('invGroups')
-
+    group = ForeignKey('invGroups', dbName='groupID')
+'''
 
 
 class mapSolarSystems(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'solarSystemID'
-        style = MixedCaseStyle()
         fromDatabase = True
-    region = ForeignKey('mapRegions')
-    constellation = ForeignKey('mapConstellations')
-    faction = ForeignKey('chrFaction')
+    region = ForeignKey('mapRegions', dbName='regionID')
+    constellation = ForeignKey('mapConstellations', dbName='constellationID')
+    faction = ForeignKey('chrFaction', dbName='factionID')
     solarSystemName = StringCol()
     border = BoolCol()
     fringe = BoolCol()
@@ -134,138 +132,156 @@ class mapSolarSystems(SQLObject):
     interconstellation = BoolCol(dbName='constellation')
     security = FloatCol()
     jumps = MultipleJoin('mapSolarSystemJumps', joinColumn='fromSolarSystem')
-    corporations = MultipleJoin('crpNPCCorporations')
-    stations = MultipleJoin('staStations')
+    corporations = MultipleJoin('crpNPCCorporations',
+                                joinColumn='solarSystemID')
+    stations = MultipleJoin('staStations', joinColumn='solarSystemID')
 
 
 class mapSolarSystemJumps(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'ROWID'
-        style = MixedCaseStyle()
-    fromSolarSystem = ForeignKey('mapSolarSystems', notNull=True, cascade=True)
-    fromRegion = ForeignKey('mapRegions')
-    fromConstellation = ForeignKey('mapConstellations')
-    toSolarSystem = ForeignKey('mapSolarSystems', notNull=True, cascade=True)
-    toRegion = ForeignKey('mapRegions')
-    toConstellation = ForeignKey('mapConstellations')
-    unique = index.DatabaseIndex('fromSolarSystem', 'toSolarSystem',
-                                 unique=True)
+    fromSolarSystem = ForeignKey('mapSolarSystems', notNone=True,
+                                 cascade=True, dbName='fromSolarSystemID')
+    fromRegion = ForeignKey('mapRegions', dbName='fromRegionID')
+    fromConstellation = ForeignKey('mapConstellations',
+                                   dbName='fromConstellationID')
+    toSolarSystem = ForeignKey('mapSolarSystems', notNone=True, cascade=True,
+                              dbName='toSolarSystemID')
+    toRegion = ForeignKey('mapRegions', dbName='toRegionID')
+    toConstellation = ForeignKey('mapConstellations', dbName='toRegionID')
+    #unique = index.DatabaseIndex('fromSolarSystem', 'toSolarSystem',
+    #                             unique=True)
 
 
 class mapConstellations(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'constellationID'
-        style = MixedCaseStyle()
         fromDatabase = True
     constellationName = StringCol()
-    region = ForeignKey('mapRegions')
-    faction = ForeignKey('chrFactions')
+    region = ForeignKey('mapRegions', dbName='regionID')
+    faction = ForeignKey('chrFactions', dbName='factionID')
     jumps = MultipleJoin('mapConstellationJumps',
                          joinColumn='fromConstellation')
-    solarSystems = MultipleJoin('mapSolarSystems')
-    stations = MultipleJoin('staStations')
+    solarSystems = MultipleJoin('mapSolarSystems', joinColumn='constellationID')
+    stations = MultipleJoin('staStations', joinColumn='constellationID')
     #TODO: multiplejoin for corporations & agents
     #no wait, that's a RELATED join!
 
 
 class mapConstellationJumps(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'ROWID'
-        style = MixedCaseStyle()
-    fromRegion = ForeignKey('mapRegions')
-    fromConstellation = ForeignKey('mapConstellations', notNull=True, cascade=True)
-    toRegion = ForeignKey('mapRegions')
-    toConstellation = ForeignKey('mapConstellations', notNull=True, cascade=True)
-    unique = index.DatabaseIndex('fromConstellation', 'toConstellation',
-                                 unique=True)
+    fromRegion = ForeignKey('mapRegions', dbName='fromRegionID')
+    fromConstellation = ForeignKey('mapConstellations', notNone=True,
+                                   cascade=True, dbName='fromConstellationID')
+    toRegion = ForeignKey('mapRegions', dbName='toRegionID')
+    toConstellation = ForeignKey('mapConstellations', notNone=True,
+                                 cascade=True, dbName='toConstellationID')
+    #unique = index.DatabaseIndex('fromConstellation', 'toConstellation',
+    #                             unique=True)
 
 
 class mapRegions(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'regionID'
-        style = MixedCaseStyle()
         fromDatabase = True
     regionName = StringCol()
-    faction = ForeignKey('chrFactions')
+    faction = ForeignKey('chrFactions', dbName='factionID')
     jumps = MultipleJoin('mapRegionJumps', joinColumn='fromRegion')
-    solarSystems = MultipleJoin('mapSolarSystems')
-    stations = MultipleJoin('staStations')
-    constellations = MultipleJoin('mapConstellations')
+    solarSystems = MultipleJoin('mapSolarSystems', joinColumn='regionID')
+    stations = MultipleJoin('staStations', joinColumn='regionID')
+    constellations = MultipleJoin('mapConstellations', joinColumn='regionID')
     #TODO: agents, corps, etc
 
 
 class mapRegionJumps(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'ROWID'
-        style = MixedCaseStyle()
-    fromRegion = ForeignKey('mapRegions', notNull=True, cascade=True)
-    toRegion = ForeignKey('mapRegions', notNull=True, cascade=True)
-    unique = index.DatabaseIndex('fromRegion', 'toRegion',
-                                 unique=True)
+    fromRegion = ForeignKey('mapRegions', notNone=True, cascade=True,
+                            dbName='fromRegionID')
+    toRegion = ForeignKey('mapRegions', notNone=True, cascade=True,
+                          dbName='toRegionID')
+    #unique = index.DatabaseIndex('fromRegion', 'toRegion',
+    #                             unique=True)
 
 
 class chrFactions(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'factionID'
-        style = MixedCaseStyle()
         fromDatabase = True
     factionName = StringCol()
     description = StringCol()
-    solarSystem = ForeignKey('mapSolarSystems')
-    corporation = ForeignKey('crpNPCCorporations')
-    militiaCorporation = ForeignKey('crpNPCCorporations')
-    corporations = MultipleJoin('crpNPCCorporations')
-    solarSystems = MultipleJoin('mapSolarSystems')
-    constellations = MultipleJoin('mapConstellations')
-    regions = MultipleJoin('mapRegions')
+    solarSystem = ForeignKey('mapSolarSystems', dbName='solarSystemID')
+    corporation = ForeignKey('crpNPCCorporations', dbName='corporationID')
+    militiaCorporation = ForeignKey('crpNPCCorporations',
+                                    dbName='militiaCorporationID')
+    corporations = MultipleJoin('crpNPCCorporations', joinColumn='factionID')
+    solarSystems = MultipleJoin('mapSolarSystems', joinColumn='factionID')
+    constellations = MultipleJoin('mapConstellations', joinColumn='factionID')
+    regions = MultipleJoin('mapRegions', joinColumn='factionID')
     #TODO: agents, stations
 
 
 class staStations(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'stationID'
-        style = MixedCaseStyle()
         fromDatabase = True
     security = IntCol()
-    stationType = ForeignKey('staStationTypes')
-    operation = ForeignKey('staOperations')
-    corporation = ForeignKey('chrNPCCorporations')
-    solarSystem = ForeignKey('mapSolarSystems')
-    constellation = ForeignKey('mapConstellations')
-    region = ForeignKey('mapRegions')
+    stationType = ForeignKey('staStationTypes', dbName='stationTypeID')
+    operation = ForeignKey('staOperations', dbName='operationID')
+    corporation = ForeignKey('chrNPCCorporations', dbName='corporationID')
+    solarSystem = ForeignKey('mapSolarSystems', dbName='solarSystemID')
+    constellation = ForeignKey('mapConstellations', dbName='constellationID')
+    region = ForeignKey('mapRegions', dbName='regionID')
     stationName = StringCol()
-    agents = MultipleJoin('agtAgents')
+    agents = MultipleJoin('agtAgents', joinColumn='locationID')
 
 
 class staOperations(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'operationID'
-        style = MixedCaseStyle()
         fromDatabase = True
     operationName = StringCol()
     description = StringCol()
     services = RelatedJoin('staServices',
                            intermediateTable='staOperationServices',
                            createRelatedTable=False, joinColumn='operationID',
-                          otherColumn='serviceID')
+                           otherColumn='serviceID')
 
 class staServices(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'serviceID'
-        style = MixedCaseStyle()
     serviceName = StringCol()
     description = StringCol()
     operations = RelatedJoin('staOperations',
                            intermediateTable='staOperationServices',
                            createRelatedTable=False, otherColumn='operationID',
-                          joinColumn='serviceID')
+                           joinColumn='serviceID')
 
 
 
 class staStationTypes(SQLObject):
     class sqlmeta:
+        style = MixedCaseStyle(longID=True)
         idName = 'stationTypeID'
-        style = MixedCaseStyle()
         fromDatabase = True
-    operation = ForeignKey('staOperations')
+    operation = ForeignKey('staOperations', dbName='operationID')
     conquerable = BoolCol()
+
+
+
+
+if __name__ == '__main__':
+    #print(chrFactions.get(1))
+    print(chrFactions.get(500001))
+
+
